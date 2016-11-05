@@ -47,9 +47,9 @@
     	// 	.classed('background', true);
 
     	var r = 100
-    	var n_circles = 4
+    	var n_circles = 10
 
-		var data = d3.range(n_circles).map(function() {
+		var data = d3.range(n_circles).map(function(i) {
 			var x_val = Math.round(Math.random() * (div_w - r * 2) + r),
 				y_val = Math.round(Math.random() * (div_h - r * 2) + r);
 		  return {
@@ -57,7 +57,7 @@
 		    y: y_val,
 		    px: x_val,
 		    py: y_val,
-		    dx: 0, dy: 0, ax:0, ay:0
+		    dx: 0, dy: 0, ax:0, ay:0, id: i
 		  };
 		});
 
@@ -79,7 +79,7 @@
     		.classed('inactive', true);
 
 		function dragstarted(d) {
-		  	d3.select(this).classed("active", true).classed('inactive', false);
+		  	d3.select(this).raise().classed("active", true).classed('inactive', false);
 			d3.select(this)
 		  		.attr('px', d.px = d.x)
 		  		.attr('px', d.py = d.y)
@@ -159,8 +159,8 @@
 					}
 					intersect_arr = intersect_m.map(function(r){ return r.has(true)})
 					d3.selectAll('.circle')
-						.classed('intersected', function(d,i) {
-							return intersect_arr[i]
+						.classed('intersected', function(d) {
+							return intersect_arr[d.id]
 						})
 		}
 		keycode = [];
