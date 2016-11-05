@@ -7,12 +7,13 @@
 			stroke:lightgrey;
 		}
 		.active {
-			fill: #FFC4C4;
-			stroke: grey;
-			stroke-width: 2;
+			fill-opacity: 0.7;
 		}
 		.background {
 			fill: #F7F7F7;
+		}
+		.intersected {
+			fill: green;
 		}
 	</style>
 	<script src="https://d3js.org/d3.v4.min.js"></script>
@@ -46,7 +47,7 @@
     	// 	.classed('background', true);
 
     	var r = 100
-    	var n_circles = 10
+    	var n_circles = 4
 
 		var data = d3.range(n_circles).map(function() {
 			var x_val = Math.round(Math.random() * (div_w - r * 2) + r),
@@ -78,7 +79,7 @@
     		.classed('inactive', true);
 
 		function dragstarted(d) {
-		  	d3.select(this).raise().classed("active", true).classed('inactive', false);
+		  	d3.select(this).classed("active", true).classed('inactive', false);
 			d3.select(this)
 		  		.attr('px', d.px = d.x)
 		  		.attr('px', d.py = d.y)
@@ -97,7 +98,15 @@
 		function dragended(d) {
 		  d3.select(this).classed("active", false).classed('inactive', true);
 		}
-		
+
+		var intersect_temp = []
+		for (var i = 0; i < data.length; i++) {
+			intersect_temp.push([])
+			for (var j = 0; j < data.length; j++) {
+				intersect_temp[i].push(false)
+			};
+		};
+
 		window.setInterval(tick, freq);
 		var prev_x = parseFloat(circle.attr('cx')), prev_y = parseFloat(circle.attr('cy'));
 		var dx = 0, dy = 0;
@@ -140,6 +149,19 @@
 				  		return d.y
 				  	});
 
+
+					var intersect_m = intersect_temp.slice()
+					for (var i = 0; i < data.length-1; i++) {
+						for (var j = i+1; j < data.length; j++) {
+							intersect_m[i][j] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(2*r, 2))
+							intersect_m[j][i] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(2*r, 2))
+						};
+					}
+					intersect_arr = intersect_m.map(function(r){ return r.has(true)})
+					d3.selectAll('.circle')
+						.classed('intersected', function(d,i) {
+							return intersect_arr[i]
+						})
 		}
 		keycode = [];
 
