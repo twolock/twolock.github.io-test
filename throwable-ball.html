@@ -18,28 +18,32 @@
 	<script src="https://d3js.org/d3.v4.min.js"></script>
 </head>
 <body>
-	<div id='chart-div' width=750 height=1334></div>
+	<!-- <div id='chart-div' width=750 height=1334></div> -->
     <script type="text/javascript">
 		var fps = 60, freq = 1/fps*1000, f = 0.98*(60/fps), g = 0.5*(60/fps), v0 = 0.05,
 			launch_v = 200;
 
-    	var target_div = '#chart-div'
-    	var div = d3.select(target_div)
+    	// var target_div = '#chart-div'
+    	// var div = d3.select(target_div)
+    	var div = d3.select('body')
 
-    	var div_h = parseInt(div.attr('height'))
-    	var div_w = parseInt(div.attr('width'))
+    	// var div_h = parseInt(div.attr('height'))
+    	// var div_w = parseInt(div.attr('width'))
+
+    	var div_h = window.innerHeight
+    	var div_w = window.innerWidth
 
     	var svg = div.append('svg')
     		.attr('height', div_h)
     		.attr('width', div_w)
     		.classed('chart', true);
 
-    	var rect = svg.append('rect')
-    		.attr('x', 0)
-    		.attr('y', 0)
-    		.attr('height', div_h)
-    		.attr('width', div_w)
-    		.classed('background', true);
+    	// var rect = svg.append('rect')
+    	// 	.attr('x', 0)
+    	// 	.attr('y', 0)
+    	// 	.attr('height', div_h)
+    	// 	.attr('width', div_w)
+    	// 	.classed('background', true);
 
     	var r = 40
     	var n_circles = 10
