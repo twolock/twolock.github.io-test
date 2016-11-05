@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style type="text/css">
+		.circle {
+			fill: indianred;
+			stroke:lightgrey;
+		}
+		.active {
+			fill: #FFC4C4;
+			stroke: grey;
+			stroke-width: 2;
+		}
+		.background {
+			fill: #F7F7F7;
+		}
+	</style>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+<body>
+	<div id='chart-div' width=400 height=500></div>
+    <script type="text/javascript">
+		var fps = 60, freq = 1/fps*1000, f = 0.98*(60/fps), g = 0.5*(60/fps), v0 = 0.05,
+			launch_v = 200;
+
+    	var target_div = '#chart-div'
+    	var div = d3.select(target_div)
+
+    	var div_h = parseInt(div.attr('height'))
+    	var div_w = parseInt(div.attr('width'))
+
+    	var svg = div.append('svg')
+    		.attr('height', div_h)
+    		.attr('width', div_w)
+    		.classed('chart', true);
+
+    	var rect = svg.append('rect')
+    		.attr('x', 0)
+    		.attr('y', 0)
+    		.attr('height', div_h)
+    		.attr('width', div_w)
+    		.classed('background', true);
+
+    	var r = 40
+    	var n_circles = 10
+
+		var data = d3.range(n_circles).map(function() {
+			var x_val = Math.round(Math.random() * (div_w - r * 2) + r),
+				y_val = Math.round(Math.random() * (div_h - r * 2) + r);
+		  return {
+		    x: x_val,
+		    y: y_val,
+		    px: x_val,
+		    py: y_val,
+		    dx: 0, dy: 0, ax:0, ay:0
+		  };
+		});
+
+    	var circle = svg.selectAll('.circle')
+    		.data(data).enter()
+    		.append('circle')
+    		.attr('cx', function(d) {return d.x})
+    		.attr('cy', function(d) {return d.y})
+    		.attr('dx', function(d) {return d.dx})
+    		.attr('dy', function(d) {return d.dy})
+    		.attr('px', function(d) {return d.px})
+    		.attr('py', function(d) {return d.py})
+    		.attr('r', r)
+    		.attr('class', 'circle')
+    		.call(d3.drag()
+		        .on("start", dragstarted)
+		        .on("drag", dragged)
+		        .on("end", dragended))
+    		.classed('inactive', true);
+
+		function dragstarted(d) {
+		  	d3.select(this).raise().classed("active", true).classed('inactive', false);
+			d3.select(this)
+		  		.attr('px', d.px = d.x)
+		  		.attr('px', d.py = d.y)
+		  		.attr("cx", d.x = d3.min([d3.max([d3.event.x, r]), div_w-r]))
+		  		.attr("cy", d.y = d3.min([d3.max([d3.event.y, r]), div_h-r]));
+		}
+
+		function dragged(d) {
+		  d3.select(this)
+		  	.attr('px', d.px = d.x)
+		  	.attr('px', d.py = d.y)
+		  	.attr("cx", d.x = d3.min([d3.max([d3.event.x, r]), div_w-r]))
+		  	.attr("cy", d.y = d3.min([d3.max([d3.event.y, r]), div_h-r]));
+		}
+
+		function dragended(d) {
+		  d3.select(this).classed("active", false).classed('inactive', true);
+		}
+		
+		window.setInterval(tick, freq);
+		var prev_x = parseFloat(circle.attr('cx')), prev_y = parseFloat(circle.attr('cy'));
+		var dx = 0, dy = 0;
+		function tick() {
+				d3.selectAll('.active').attr('dx', function(d) {
+						d.dx = d.x - d.px
+						return d.dx
+					})
+					.attr('dy', function(d) {
+						d.dy = d.y - d.py
+						return d.dy
+					})
+
+				d3.selectAll('.inactive').attr('dx', function(d) {
+						d.dx *= f;
+						if (d.x <= r | d.x >= div_w - r) {d.dx *= -0.85}
+						if (Math.abs(d.dx) < v0) d.dx = 0
+						return d.dx
+					})
+					.attr('dy', function(d) {
+						d.dy *= f;
+						if (d.y <= r | d.y >= div_h - r) {d.dy *= -0.85}
+						if (Math.abs(d.dy) < v0) d.dy = 0
+						return d.dy
+					})
+					.attr('px', function(d) {
+						d.px = d.x
+						return d.px
+					})
+					.attr('py', function(d) {
+						d.py = d.y
+						return d.py
+					})
+					.attr('cx', function(d) {
+						d.x = d3.min([d3.max([d.x + d.dx , r]), div_w-r])
+						return d.x
+					})
+				  	.attr("cy", function(d) {
+				  		d.y = d3.min([d3.max([d.y + d.dy, r]), div_h-r])
+				  		return d.y
+				  	});
+
+		}
+		keycode = [];
+
+		window.onkeydown = function() {
+			keycode.push(window.event.keyCode);
+			if(keycode.has(76)) launch();
+		}
+		window.onkeyup = function() {
+			while(keycode.has(window.event.keyCode)) {
+				keycode.splice(keycode.indexOf(window.event.keyCode),1);
+			}
+		}
+		//Prototype element-in-array detection function.
+		Array.prototype.has = function(n) {
+			for (var i = 0; i < this.length; i++) {
+	        	if (this[i] === n) return true;
+	   		}
+	    	return false;
+		}
+	
+		function launch () {
+			svg.selectAll('.inactive')
+				.attr('dx', function(d) {
+					d.dx = launch_v*Math.random()-(launch_v/2)
+					return d.dx
+				})
+				.attr('dy', function(d) {
+					d.dy = launch_v*Math.random()-(launch_v/2)
+					return d.dy
+				})
+		}
+    </script>
+</body>
+</html>
