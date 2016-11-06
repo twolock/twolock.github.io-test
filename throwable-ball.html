@@ -17,6 +17,7 @@
 		}
 	</style>
 	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script type="text/javascript" src="https://cdn.rawgit.com/alexgibson/shake.js/master/shake.js"></script>
 </head>
 <body>
 	<!-- <div id='chart-div' width=750 height=1334></div> -->
@@ -196,6 +197,13 @@
 					return d.dy
 				})
 		}
+			    //listen to shake event
+	    var shakeEvent = new Shake({threshold: 15});
+	    shakeEvent.start();
+	    window.addEventListener('shake', function(){
+	        launch();
+	    }, false);
+
     </script>
 </body>
 </html>
