@@ -46,18 +46,21 @@
     	// 	.attr('width', div_w)
     	// 	.classed('background', true);
 
-    	var r = 50
-    	var n_circles = 50
+    	var r_max = 60
+    	var r_min = 20
+    	var n_circles = 10
 
 		var data = d3.range(n_circles).map(function(i) {
-			var x_val = Math.round(Math.random() * (div_w - r * 2) + r),
-				y_val = Math.round(Math.random() * (div_h - r * 2) + r);
+			var r_val = Math.floor(Math.random() * (r_max-r_min)) + r_min
+			var x_val = Math.round(Math.random() * (div_w - r_val * 2) + r_val),
+				y_val = Math.round(Math.random() * (div_h - r_val * 2) + r_val);
 		  return {
 		    x: x_val,
 		    y: y_val,
 		    px: x_val,
 		    py: y_val,
-		    dx: 0, dy: 0, ax:0, ay:0, id: i
+		    dx: 0, dy: 0, ax:0, ay:0, id: i,
+		    r: r_val
 		  };
 		});
 
@@ -70,7 +73,7 @@
     		.attr('dy', function(d) {return d.dy})
     		.attr('px', function(d) {return d.px})
     		.attr('py', function(d) {return d.py})
-    		.attr('r', r)
+    		.attr('r', function(d) { return d.r})
     		.attr('class', 'circle')
     		.call(d3.drag()
 		        .on("start", dragstarted)
@@ -83,16 +86,16 @@
 			d3.select(this)
 		  		.attr('px', d.px = d.x)
 		  		.attr('px', d.py = d.y)
-		  		.attr("cx", d.x = d3.min([d3.max([d3.event.x, r]), div_w-r]))
-		  		.attr("cy", d.y = d3.min([d3.max([d3.event.y, r]), div_h-r]));
+		  		.attr("cx", d.x = d3.min([d3.max([d3.event.x, d.r]), div_w-d.r]))
+		  		.attr("cy", d.y = d3.min([d3.max([d3.event.y, d.r]), div_h-d.r]));
 		}
 
 		function dragged(d) {
 		  d3.select(this)
 		  	.attr('px', d.px = d.x)
 		  	.attr('px', d.py = d.y)
-		  	.attr("cx", d.x = d3.min([d3.max([d3.event.x, r]), div_w-r]))
-		  	.attr("cy", d.y = d3.min([d3.max([d3.event.y, r]), div_h-r]));
+		  	.attr("cx", d.x = d3.min([d3.max([d3.event.x, d.r]), div_w-d.r]))
+		  	.attr("cy", d.y = d3.min([d3.max([d3.event.y, d.r]), div_h-d.r]));
 		}
 
 		function dragended(d) {
@@ -122,13 +125,13 @@
 
 				d3.selectAll('.inactive').attr('dx', function(d) {
 						d.dx *= f;
-						if (d.x <= r | d.x >= div_w - r) {d.dx *= -0.85}
+						if (d.x <= d.r | d.x >= div_w - d.r) {d.dx *= -0.85}
 						if (Math.abs(d.dx) < v0) d.dx = 0
 						return d.dx
 					})
 					.attr('dy', function(d) {
 						d.dy *= f;
-						if (d.y <= r | d.y >= div_h - r) {d.dy *= -0.85}
+						if (d.y <= d.r | d.y >= div_h - d.r) {d.dy *= -0.85}
 						if (Math.abs(d.dy) < v0) d.dy = 0
 						return d.dy
 					})
@@ -141,11 +144,11 @@
 						return d.py
 					})
 					.attr('cx', function(d) {
-						d.x = d3.min([d3.max([d.x + d.dx , r]), div_w-r])
+						d.x = d3.min([d3.max([d.x + d.dx , d.r]), div_w-d.r])
 						return d.x
 					})
 				  	.attr("cy", function(d) {
-				  		d.y = d3.min([d3.max([d.y + d.dy, r]), div_h-r])
+				  		d.y = d3.min([d3.max([d.y + d.dy, d.r]), div_h-d.r])
 				  		return d.y
 				  	});
 
@@ -153,8 +156,8 @@
 					var intersect_m = intersect_temp.slice()
 					for (var i = 0; i < data.length-1; i++) {
 						for (var j = i+1; j < data.length; j++) {
-							intersect_m[i][j] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(2*r, 2))
-							intersect_m[j][i] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(2*r, 2))
+							intersect_m[i][j] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(data[i].r+data[j].r, 2))
+							intersect_m[j][i] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(data[i].r+data[j].r, 2))
 						};
 					}
 					intersect_arr = intersect_m.map(function(r){ return r.has(true)})
