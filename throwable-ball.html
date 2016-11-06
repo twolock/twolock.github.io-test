@@ -22,6 +22,21 @@
 <body>
 	<!-- <div id='chart-div' width=750 height=1334></div> -->
     <script type="text/javascript">
+
+		function collide(v1, v2, m1, m2) {
+			var new_v1 = v1*(m1 - m2)/(m1+m2) + 2*v2*(m2)/(m1+m2)
+			var new_v2 = v2*(m2 - m1)/(m1+m2) + 2*v1*(m1)/(m1+m2)
+
+			return new_v1
+		}
+
+		function getAllIndexes(arr, val) {
+		    var indexes = [], i;
+		    for(i = 0; i < arr.length; i++)
+		        if (arr[i] === val)
+		            indexes.push(i);
+		    return indexes;
+		}
 		var fps = 60, freq = 1/fps*1000, f = 0.98*(60/fps), g = 0.5*(60/fps), v0 = 0.05,
 			launch_v = 200;
 
@@ -32,8 +47,8 @@
     	// var div_h = parseInt(div.attr('height'))
     	// var div_w = parseInt(div.attr('width'))
 
-    	var div_h = window.innerHeight
-    	var div_w = window.innerWidth
+    	var div_h = window.innerHeight-20
+    	var div_w = window.innerWidth-20
 
     	var svg = div.append('svg')
     		.attr('height', div_h)
@@ -47,9 +62,9 @@
     	// 	.attr('width', div_w)
     	// 	.classed('background', true);
 
-    	var r_max = 60
+    	var r_max = 70
     	var r_min = 20
-    	var n_circles = 20
+    	var n_circles = 5
 
 		var data = d3.range(n_circles).map(function(i) {
 			var r_val = Math.floor(Math.random() * (r_max-r_min)) + r_min
@@ -64,6 +79,7 @@
 		    r: r_val
 		  };
 		});
+		var r_arr = data.map(function(d){return d.r})
 
     	var circle = svg.selectAll('.circle')
     		.data(data).enter()
@@ -115,6 +131,57 @@
 		var prev_x = parseFloat(circle.attr('cx')), prev_y = parseFloat(circle.attr('cy'));
 		var dx = 0, dy = 0;
 		function tick() {
+				var intersect_m = intersect_temp.slice()
+				for (var i = 0; i < data.length-1; i++) {
+					for (var j = i+1; j < data.length; j++) {
+						intersect_m[i][j] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(data[i].r+data[j].r+1, 2))
+						intersect_m[j][i] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(data[i].r+data[j].r+1, 2))
+					};
+				}
+				var intersect_arr = intersect_m.map(function(r){ return r.has(true)})
+				d3.selectAll('.circle')
+					.classed('intersected', function(d) {
+						return intersect_arr[d.id]
+					})
+
+				var dx_arr = circle.data().map(function(d){return d.dx})
+				var id_arr = circle.data().map(function(d){return d.id})
+
+				var dx_arr_new = dx_arr.slice()
+
+				for (var i = dx_arr.length - 1; i >= 0; i--) {
+					var intersections = getAllIndexes(intersect_m[i], true)
+					if (intersect_arr[i]) {
+						new_dx = 0
+						for (var j = intersections.length - 1; j >= 0; j--) {
+							new_dx += collide(dx_arr[i], dx_arr[id_arr.indexOf(intersections[j])], r_arr[i], r_arr[intersections[j]]);
+						};
+						dx_arr_new[i] = new_dx
+					}
+				};
+
+				var dy_arr = circle.data().map(function(d){return d.dy})
+				var dy_arr_new = dy_arr.slice()
+				for (var i = dy_arr.length - 1; i >= 0; i--) {
+					var intersections = getAllIndexes(intersect_m[i], true)
+					if (intersect_arr[i]) {
+						new_dy = 0
+						for (var j = intersections.length - 1; j >= 0; j--) {
+							new_dy += collide(dy_arr[i], dy_arr[id_arr.indexOf(intersections[j])], r_arr[i], r_arr[intersections[j]]);
+						};
+						dy_arr_new[i] = new_dy
+					}
+				};
+
+				d3.selectAll('.inactive')
+					.attr('dx', function(d) {
+						d.dx = dx_arr_new[d.id]
+						return d.dx
+					})
+					.attr('dy', function(d) {
+						d.dy = dy_arr_new[d.id]
+						return d.dy
+					});
 				d3.selectAll('.active').attr('dx', function(d) {
 						d.dx = d.x - d.px
 						return d.dx
@@ -153,19 +220,6 @@
 				  		return d.y
 				  	});
 
-
-					var intersect_m = intersect_temp.slice()
-					for (var i = 0; i < data.length-1; i++) {
-						for (var j = i+1; j < data.length; j++) {
-							intersect_m[i][j] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(data[i].r+data[j].r, 2))
-							intersect_m[j][i] = (Math.pow(data[i].x-data[j].x,2) + Math.pow(data[i].y-data[j].y,2) <= Math.pow(data[i].r+data[j].r, 2))
-						};
-					}
-					intersect_arr = intersect_m.map(function(r){ return r.has(true)})
-					d3.selectAll('.circle')
-						.classed('intersected', function(d) {
-							return intersect_arr[d.id]
-						})
 		}
 		keycode = [];
 
